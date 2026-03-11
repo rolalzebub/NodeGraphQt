@@ -2712,11 +2712,33 @@ class SubGraph(NodeGraph):
             identifier = n_data['type_']
             name = n_data.get('name')
             if identifier == PortInputNode.type_:
-                nodes[n_id] = input_nodes[name]
+                input_node = input_nodes.get(name)
+                if input_node is None:
+                    parent_port = self.node.get_input(name)
+                    if parent_port is None:
+                        parent_port = self.node.add_input(name)
+                    input_node = PortInputNode(parent_port=parent_port)
+                    input_node.NODE_NAME = name
+                    input_node.model.set_property('name', name)
+                    input_node.add_output(name)
+                    input_nodes[name] = input_node
+                    self.add_node(input_node, selected=False, push_undo=False)
+                nodes[n_id] = input_node
                 nodes[n_id].set_pos(*(n_data.get('pos') or [0, 0]))
                 continue
             elif identifier == PortOutputNode.type_:
-                nodes[n_id] = output_nodes[name]
+                output_node = output_nodes.get(name)
+                if output_node is None:
+                    parent_port = self.node.get_output(name)
+                    if parent_port is None:
+                        parent_port = self.node.add_output(name)
+                    output_node = PortOutputNode(parent_port=parent_port)
+                    output_node.NODE_NAME = name
+                    output_node.model.set_property('name', name)
+                    output_node.add_input(name)
+                    output_nodes[name] = output_node
+                    self.add_node(output_node, selected=False, push_undo=False)
+                nodes[n_id] = output_node
                 nodes[n_id].set_pos(*(n_data.get('pos') or [0, 0]))
                 continue
 
